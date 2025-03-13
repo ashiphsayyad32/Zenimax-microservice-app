@@ -6,7 +6,7 @@ class Config:
     PORT = 5000
     
     # Database settings
-    DB_HOST = 'localhost'
-    DB_USER = 'root'
-    DB_PASSWORD = 'root'
+    DB_HOST = 'microservices-database.cvggya6kg1r7.us-east-1.rds.amazonaws.com'
+    DB_USER = 'admin'
+    DB_PASSWORD = 'admin123'
     DB_NAME = 'todoappdb'

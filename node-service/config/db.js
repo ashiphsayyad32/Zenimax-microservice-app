@@ -3,9 +3,9 @@ require('dotenv').config();
 
 // Database configuration
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'root',
+  host: process.env.DB_HOST || 'microservices-database.cvggya6kg1r7.us-east-1.rds.amazonaws.com',
+  user: process.env.DB_USER || 'admin',
+  password: process.env.DB_PASSWORD || 'admin123',
   database: process.env.DB_NAME || 'todoappdb',
   waitForConnections: true,
   connectionLimit: 10,
