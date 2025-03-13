@@ -1,7 +1,7 @@
 {
-  "name": "node-service",
+  "name": "todo-app-node-service",
   "version": "1.0.0",
-  "description": "Node.js microservice for categories in Todo App",
+  "description": "Node.js service for Todo App microservices architecture",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -20,5 +20,13 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
-  }
+  },
+  "keywords": [
+    "node",
+    "express",
+    "microservices",
+    "todo"
+  ],
+  "author": "",
+  "license": "ISC"
 }
