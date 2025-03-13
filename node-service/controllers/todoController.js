@@ -1,7 +1,23 @@
+/**
+ * Todo Controller
+ * 
+ * This controller is responsible for aggregating data from all microservices:
+ * - Categories from Node.js service (local database)
+ * - Tasks from Java service
+ * - Statuses from Python service
+ * 
+ * It serves as the central point for combining data from all three services
+ * to provide a complete view of todos with their tasks and statuses.
+ */
 const axios = require('axios');
 const { pool } = require('../config/db');
 
-// Get all todos (combining data from all microservices)
+/**
+ * Get all todos by combining data from all microservices
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 async function getAllTodos(req, res) {
   try {
     // Step 1: Get categories from this service (Node.js)
@@ -23,11 +39,13 @@ async function getAllTodos(req, res) {
     const statuses = statusesResponse.data;
     console.log(`Received ${statuses.length} statuses from Python service`);
     
-    // Step 4: Combine the data
+    // Step 4: Combine the data from all three services
     console.log('Combining data from all three services...');
     const todos = categories.map(category => {
+      // Find all tasks that belong to this category
       const categoryTasks = tasks.filter(task => task.categoryId === category.id);
       
+      // For each task, find its status (if any)
       const tasksWithStatus = categoryTasks.map(task => {
         const taskStatus = statuses.find(status => status.task_id === task.id) || null;
         return {
@@ -40,6 +58,7 @@ async function getAllTodos(req, res) {
         };
       });
       
+      // Return the category with its tasks and data source information
       return {
         ...category,
         tasks: tasksWithStatus,
@@ -48,6 +67,8 @@ async function getAllTodos(req, res) {
     });
     
     console.log('Successfully combined data from all services');
+    
+    // Return the combined data with metadata about the data flow
     res.json({
       metadata: {
         dataFlow: {
@@ -69,6 +90,7 @@ async function getAllTodos(req, res) {
       data: todos
     });
   } catch (error) {
+    // Handle errors and provide detailed information about which service failed
     console.error('Error fetching todos:', error);
     res.status(500).json({ 
       error: 'Failed to fetch todos', 
