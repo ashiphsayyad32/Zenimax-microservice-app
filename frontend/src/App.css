@@ -108,10 +108,43 @@
   font-weight: 600;
 }
 
+/* Task container styling */
+.task-container {
+  padding: 8px 4px;
+}
+
+.task-content {
+  width: 100%;
+}
+
+.data-source-inline {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.status-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .service-box {
     margin-bottom: 15px;
+  }
+  
+  .task-content {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  
+  .status-container {
+    margin-top: 10px;
+    align-items: flex-start;
+    width: 100%;
   }
 }
 

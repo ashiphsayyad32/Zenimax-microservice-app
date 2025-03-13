@@ -70,7 +70,7 @@ const Header = () => {
     <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">
       <Container>
         {/* Application title */}
-        <Navbar.Brand href="#" className="text-white fw-bold">Zenimax Todo App</Navbar.Brand>
+        <Navbar.Brand href="#" className="text-white fw-bold">Todo Microservice App</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
           <Nav>

@@ -6,6 +6,10 @@ import TodoList from './components/TodoList';
 import AddTodoForm from './components/AddTodoForm';
 import './App.css';
 
+/**
+ * Main App component
+ * Manages the overall application layout and service health checks
+ */
 function App() {
   const [refreshTodos, setRefreshTodos] = useState(false);
   const [servicesStatus, setServicesStatus] = useState({
@@ -16,11 +20,15 @@ function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Check services on component mount and every 30 seconds
     checkServices();
     const intervalId = setInterval(checkServices, 30000);
     return () => clearInterval(intervalId);
   }, []);
 
+  /**
+   * Check the health of all microservices
+   */
   const checkServices = async () => {
     try {
       const nodeCheck = fetch('http://localhost:4000/api/health')
@@ -54,6 +62,9 @@ function App() {
     }
   };
 
+  /**
+   * Handle when a new task is added to refresh the todo list
+   */
   const handleTaskAdded = () => {
     setRefreshTodos(prev => !prev);
   };
@@ -86,7 +97,7 @@ function App() {
       </Container>
       <footer className="mt-5 py-3 text-center text-muted">
         <small>
-          Zenimax Microservice Todo App - Node.js (4000) | Java (8080) | Python (5000)
+          Todo Microservice App - Node.js (4000) | Java (8080) | Python (5000)
         </small>
       </footer>
     </div>

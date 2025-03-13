@@ -3,6 +3,14 @@ import axios from 'axios';
 import { Card, ListGroup, Badge, Alert, Spinner, Accordion } from 'react-bootstrap';
 import { FaNodeJs, FaJava, FaPython, FaDatabase } from 'react-icons/fa';
 
+/**
+ * TodoList Component
+ * 
+ * Displays the list of todos fetched from the Node.js service, which aggregates data from:
+ * - Categories from Node.js service
+ * - Tasks from Java service
+ * - Statuses from Python service
+ */
 const TodoList = () => {
   const [todos, setTodos] = useState([]);
   const [metadata, setMetadata] = useState(null);
@@ -10,9 +18,13 @@ const TodoList = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Fetch todos when component mounts
     fetchTodos();
   }, []);
 
+  /**
+   * Fetches todos from the Node.js service which aggregates data from all microservices
+   */
   const fetchTodos = async () => {
     setLoading(true);
     try {
@@ -28,6 +40,11 @@ const TodoList = () => {
     }
   };
 
+  /**
+   * Returns a badge component based on the status name
+   * @param {Object} status - The status object from the Python service
+   * @returns {JSX.Element} - A Badge component with appropriate styling
+   */
   const getStatusBadge = (status) => {
     if (!status) return <Badge bg="secondary">No Status</Badge>;
     
@@ -142,20 +159,27 @@ const TodoList = () => {
               <ListGroup.Item className="text-muted">No tasks in this category</ListGroup.Item>
             ) : (
               category.tasks.map((task) => (
-                <ListGroup.Item key={task.id} className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <div className="fw-bold">{task.description}</div>
-                    <small className="text-muted">
-                      <FaJava className="me-1" /> Task from Java Service
-                      {task.status && (
-                        <span className="ms-3">
-                          <FaPython className="me-1" /> Status from Python Service
-                        </span>
-                      )}
-                    </small>
-                  </div>
-                  <div>
-                    {getStatusBadge(task.status)}
+                <ListGroup.Item key={task.id}>
+                  <div className="task-container">
+                    <div className="task-content d-flex justify-content-between align-items-center mb-2">
+                      <div>
+                        <div className="fw-bold">{task.description}</div>
+                        <div className="data-source-inline">
+                          <FaJava className="me-1 text-primary" /> 
+                          <small className="text-muted">Task from Java Service</small>
+                        </div>
+                      </div>
+                      
+                      <div className="status-container">
+                        {task.status && (
+                          <div className="data-source-inline mb-1">
+                            <FaPython className="me-1 text-success" /> 
+                            <small className="text-muted">Status from Python Service</small>
+                          </div>
+                        )}
+                        <div>{getStatusBadge(task.status)}</div>
+                      </div>
+                    </div>
                   </div>
                 </ListGroup.Item>
               ))
