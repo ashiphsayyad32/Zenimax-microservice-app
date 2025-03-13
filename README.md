@@ -11,11 +11,11 @@ A microservice-based todo application with the following components:
 ## Project Structure
 
 ```
-├── docker-compose.yml    # Docker Compose configuration
 ├── node-service/         # Node.js service (Categories)
 ├── java-service/         # Java service (Tasks)
 ├── python-service/       # Python service (Status)
-└── frontend/             # React frontend
+├── frontend/             # React frontend
+└── init-database.sql     # Database initialization script
 ```
 
 ## Database Schema
@@ -37,21 +37,64 @@ A microservice-based todo application with the following components:
 - **statuses**: Managed by Python service
   - id (Primary Key)
   - task_id (Foreign Key)
-  - status (e.g., "pending", "in-progress", "completed")
+  - status_name (e.g., "Pending", "Completed", "Failed")
   - created_at
   - updated_at
 
 ## How to Run
 
-1. Make sure you have Docker and Docker Compose installed
-2. Clone this repository
-3. Run the following command to start all services:
+### Prerequisites
 
-```bash
-docker-compose up -d
-```
+- Node.js v22
+- Java 17 (with Maven)
+- Python 3.8+
+- MySQL Database
 
-4. Access the frontend at http://localhost:80
+### Database Setup
+
+The application uses a MySQL database with the following configuration:
+- Host: microservices-database.cvggya6kg1r7.us-east-1.rds.amazonaws.com
+- Port: 3306
+- Database: todoappdb
+- Username: admin
+- Password: admin123
+
+### Starting the Services
+
+1. **Start the Java Service**:
+   ```bash
+   cd java-service
+   mvn spring-boot:run
+   ```
+   The Java service will run on port 8080.
+
+2. **Start the Python Service**:
+   ```bash
+   cd python-service
+   pip install -r requirements.txt
+   python run.py
+   ```
+   The Python service will run on port 5000.
+
+3. **Start the Node.js Service**:
+   ```bash
+   cd node-service
+   npm install
+   npm start
+   ```
+   The Node.js service will run on port 3000.
+
+4. **Start the React Frontend**:
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
+   The React frontend will run on port 3001.
+
+### Accessing the Application
+
+Once all services are running, you can access the frontend at http://localhost:3001
 
 ## API Endpoints
 
@@ -59,11 +102,25 @@ docker-compose up -d
 - GET /api/categories - Get all categories
 - POST /api/categories - Create a new category
 - GET /api/todos - Get all todos with tasks and statuses
+- GET /health - Health check endpoint
 
 ### Java Service (Tasks)
 - GET /api/tasks - Get all tasks
 - POST /api/tasks - Create a new task
+- GET /api/health - Health check endpoint
 
 ### Python Service (Statuses)
 - GET /api/statuses - Get all statuses
 - POST /api/statuses - Create a new status
+- GET /api/health - Health check endpoint
+
+## Troubleshooting
+
+If you encounter any issues:
+
+1. Make sure all services are running
+2. Check the console logs for each service
+3. Verify database connectivity
+4. Ensure the correct ports are available (3000, 3001, 5000, 8080)
+
+The React frontend includes a service status indicator that will show which services are currently running.

@@ -55,4 +55,4 @@ def get_connection():
 def convert_datetime(obj):
     if isinstance(obj, datetime):
         return obj.isoformat()
-    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+    return str(obj)

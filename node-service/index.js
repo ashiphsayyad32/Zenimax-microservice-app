@@ -10,7 +10,7 @@ const todoRoutes = require('./routes/todoRoutes');
 const { initializeDatabase } = require('./config/db');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(cors());
@@ -21,7 +21,7 @@ app.use('/api', categoryRoutes);
 app.use('/api', todoRoutes);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'UP' });
 });
 

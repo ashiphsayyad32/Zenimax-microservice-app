@@ -36,8 +36,8 @@ def create_status():
     try:
         data = request.get_json()
         
-        if not data or 'task_id' not in data or 'status' not in data:
-            return jsonify({'error': 'Task ID and status are required'}), 400
+        if not data or 'task_id' not in data or 'status_name' not in data:
+            return jsonify({'error': 'Task ID and status_name are required'}), 400
         
         conn = get_connection()
         if not conn:
@@ -46,7 +46,7 @@ def create_status():
         cursor = conn.cursor()
         
         query = "INSERT INTO statuses (task_id, status) VALUES (%s, %s)"
-        cursor.execute(query, (data['task_id'], data['status']))
+        cursor.execute(query, (data['task_id'], data['status_name']))
         
         status_id = cursor.lastrowid
         conn.commit()
@@ -56,13 +56,13 @@ def create_status():
         return jsonify({
             'id': status_id,
             'task_id': data['task_id'],
-            'status': data['status'],
+            'status_name': data['status_name'],
             'created_at': datetime.now().isoformat(),
             'updated_at': datetime.now().isoformat()
         }), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/health', methods=['GET'])
+@app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'UP'}), 200

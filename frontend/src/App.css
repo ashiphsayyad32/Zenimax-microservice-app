@@ -1,0 +1,125 @@
+.App {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  text-align: center;
+}
+
+.App-logo {
+  height: 40px;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+  padding: 20px;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.nav-tabs .nav-link {
+  font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+  border-bottom: 3px solid #007bff;
+}
+
+.service-status {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.status-up {
+  background-color: #28a745;
+}
+
+.status-down {
+  background-color: #dc3545;
+}
+
+.service-box {
+  padding: 20px;
+  border-radius: 8px;
+  height: 100%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.service-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.service-box.node {
+  background-color: #68a063;
+  color: white;
+}
+
+.service-box.java {
+  background-color: #5382a1;
+  color: white;
+}
+
+.service-box.python {
+  background-color: #306998;
+  color: white;
+}
+
+.data-flow-diagram {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.todo-list h3 {
+  color: #495057;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .service-box {
+    margin-bottom: 15px;
+  }
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

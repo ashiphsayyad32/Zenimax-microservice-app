@@ -12,11 +12,11 @@ This service handles the Category data and acts as an API gateway for the Todo A
 ## Database
 
 This service connects to a MySQL database with the following configuration:
-- Host: localhost
+- Host: microservices-database.cvggya6kg1r7.us-east-1.rds.amazonaws.com
 - Port: 3306
 - Database: todoappdb
-- Username: root
-- Password: root
+- Username: admin
+- Password: admin123
 
 ## How to Run
 
