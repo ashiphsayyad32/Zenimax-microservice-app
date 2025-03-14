@@ -1,0 +1,44 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: java-service-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    # Enable CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    # Session affinity
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+    # Additional security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+spec:
+  rules:
+  - host: java-api.microservices.local
+    http:
+      paths:
+      # Java API endpoints with more specific paths
+      - path: /tasks(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: java-service
+            port:
+              number: 8080
+      # Spring Boot Actuator endpoints
+      - path: /actuator(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: java-service
+            port:
+              number: 8080
