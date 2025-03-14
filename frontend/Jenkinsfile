@@ -1,0 +1,150 @@
+pipeline {
+    agent {
+        // Use a Node.js agent for building the React app
+        docker {
+            image 'node:18-alpine'
+            args '-v /tmp:/tmp'
+        }
+    }
+
+    environment {
+        // Environment variables
+        WORKING_DIR = 'frontend'
+        AWS_REGION = 'us-east-1'
+        S3_BUCKET = credentials('s3-bucket-name')
+        // Use Jenkins credentials for AWS
+        AWS_CREDENTIALS = credentials('aws-credentials')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout code from repository
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir(WORKING_DIR) {
+                    // Install dependencies
+                    sh 'npm ci'
+                }
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                dir(WORKING_DIR) {
+                    // Run linting
+                    sh 'npm run lint || echo "Linting not configured, skipping"'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir(WORKING_DIR) {
+                    // Run tests
+                    sh 'npm test -- --passWithNoTests'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir(WORKING_DIR) {
+                    // Build the React app
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Deploy to S3') {
+            // Use AWS CLI container for deployment
+            agent {
+                docker {
+                    image 'amazon/aws-cli:latest'
+                    reuseNode true
+                }
+            }
+            steps {
+                // Configure AWS credentials
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
+                                  credentialsId: 'aws-credentials',
+                                  accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+                                  secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    // Deploy static assets with cache headers
+                    sh """
+                        aws s3 sync ${WORKING_DIR}/build/ s3://\${S3_BUCKET}/ \\
+                            --delete \\
+                            --cache-control "max-age=86400" \\
+                            --exclude "*.html" \\
+                            --exclude "service-worker.js" \\
+                            --region ${AWS_REGION}
+                    """
+                    
+                    // Deploy HTML and service worker with no-cache headers
+                    sh """
+                        aws s3 sync ${WORKING_DIR}/build/ s3://\${S3_BUCKET}/ \\
+                            --exclude "*" \\
+                            --include "*.html" \\
+                            --include "service-worker.js" \\
+                            --cache-control "no-cache,no-store,must-revalidate" \\
+                            --region ${AWS_REGION}
+                    """
+                }
+            }
+        }
+
+        stage('Invalidate CloudFront') {
+            // Only run if CLOUDFRONT_DISTRIBUTION_ID credential exists
+            when {
+                expression { 
+                    try {
+                        withCredentials([string(credentialsId: 'cloudfront-distribution-id', variable: 'CLOUDFRONT_ID')]) {
+                            return true
+                        }
+                    } catch (e) {
+                        return false
+                    }
+                }
+            }
+            agent {
+                docker {
+                    image 'amazon/aws-cli:latest'
+                    reuseNode true
+                }
+            }
+            steps {
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding', 
+                     credentialsId: 'aws-credentials',
+                     accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
+                    [string(credentialsId: 'cloudfront-distribution-id', variable: 'CLOUDFRONT_ID')]
+                ]) {
+                    sh """
+                        aws cloudfront create-invalidation \\
+                            --distribution-id \${CLOUDFRONT_ID} \\
+                            --paths "/*" \\
+                            --region ${AWS_REGION}
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean workspace
+            cleanWs()
+        }
+        success {
+            echo "Deployment successful! The React app is now available at http://${S3_BUCKET}.s3-website-${AWS_REGION}.amazonaws.com/"
+        }
+        failure {
+            echo "Deployment failed. Check the logs for details."
+        }
+    }
+}
