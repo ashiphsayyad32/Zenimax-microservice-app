@@ -1,31 +1,27 @@
+# Build Stage
 FROM maven:3.8.4-openjdk-17 AS build
-
+ 
 WORKDIR /app
-
-# Copy the Maven configuration files
+ 
+# Copy only pom.xml first to leverage Docker cache
 COPY pom.xml .
-COPY mvnw .
-COPY .mvn .mvn
-
-# Download all required dependencies
+ 
+# Download dependencies
 RUN mvn dependency:go-offline -B
-
-# Copy the project source
-COPY src src
-
+ 
+# Copy the complete project
+COPY . .
+ 
 # Package the application
 RUN mvn package -DskipTests
-
-# Use a smaller JRE image for the runtime
+ 
+# Runtime Stage
 FROM openjdk:17-jdk-slim
-
+ 
 WORKDIR /app
-
-# Copy the JAR file from the build stage
+ 
 COPY --from=build /app/target/*.jar app.jar
-
-# Expose the port the app runs on
+ 
 EXPOSE 8080
-
-# Run the application
+ 
 CMD ["java", "-jar", "app.jar"]
