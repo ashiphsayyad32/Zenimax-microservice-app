@@ -9,7 +9,7 @@ spec:
   ports:
   - port: 4000
     targetPort: 4000
-    nodePort: 30080
+    # nodePort: 30080
     protocol: TCP
     name: http
   selector:

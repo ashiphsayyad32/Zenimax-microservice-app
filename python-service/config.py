@@ -1,12 +1,13 @@
 # Configuration settings for the Python service
+import os
 
 class Config:
-    DEBUG = True
-    HOST = '0.0.0.0'
-    PORT = 5000
+    DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+    HOST = os.environ.get('HOST', '0.0.0.0')
+    PORT = int(os.environ.get('PORT', 5000))
     
     # Database settings
-    DB_HOST = 'microservices-db.cvggya6kg1r7.us-east-1.rds.amazonaws.com'
-    DB_USER = 'admin'
-    DB_PASSWORD = 'admin123'
-    DB_NAME = 'todoappdb'
+    DB_HOST = os.environ.get('DB_HOST')
+    DB_USER = os.environ.get('DB_USERNAME')
+    DB_PASSWORD = os.environ.get('DB_PASSWORD')
+    DB_NAME = os.environ.get('DB_NAME')

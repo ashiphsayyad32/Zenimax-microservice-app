@@ -16,13 +16,15 @@ spec:
     spec:
       containers:
       - name: node-service
-        image: ${DOCKER_REGISTRY}/node-service:latest
+        image: 058264463902.dkr.ecr.us-east-1.amazonaws.com/node-service-repo:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 4000
         envFrom:
         - configMapRef:
             name: node-service-config
+        - secretRef:
+            name: node-service-secret
         resources:
           limits:
             cpu: "500m"
