@@ -3,10 +3,5 @@ kind: ConfigMap
 metadata:
   name: java-service-config
 data:
-  SPRING_DATASOURCE_URL: "jdbc:mysql://mysql-service:3306/todoappdb?createDatabaseIfNotExist=true"
-  SPRING_DATASOURCE_DRIVER_CLASS_NAME: "com.mysql.cj.jdbc.Driver"
-  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
-  SPRING_JPA_SHOW_SQL: "true"
-  SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
-  SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: "org.hibernate.dialect.MySQLDialect"
-  SERVER_PORT: "8080"
+  DB_NAME: "todoappdb"
+  DB_USERNAME: "admin"
