@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: java-service
-        image: ${DOCKER_REGISTRY}/java-service:latest
+        image: 058264463902.dkr.ecr.us-east-1.amazonaws.com/java-service-repo:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -27,10 +27,10 @@ spec:
             name: java-service-secret
         resources:
           limits:
-            cpu: "1000m"
+            cpu: "500m"
             memory: "1Gi"
           requests:
-            cpu: "500m"
+            cpu: "250m"
             memory: "512Mi"
         readinessProbe:
           httpGet:
