@@ -30,6 +30,8 @@ jobs:
       # Checkout code
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for better SonarQube analysis
 
       # Setup Node.js
       - name: Setup Node.js
@@ -43,32 +45,26 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Run tests with fixed configuration for ESM modules
-      - name: Run Tests
-        run: npm test -- --watchAll=false
-        env:
-          CI: false
-        continue-on-error: true  # Allow deployment even if tests fail
+      # Run tests with coverage and generate SonarQube reports
+      - name: Run Tests with Coverage
+        run: npm run test:ci
+        continue-on-error: true  
 
-        # SonarQube Scan
+      # SonarQube Scan with test coverage
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
-          args: >
-            -Dsonar.projectKey=todo-react-app
-            -Dsonar.sources=.
-            -Dsonar.exclusions=**/*.java,../node-service/**,../java-service/**,../python-service/**,../init-database.sql,node_modules/**,build/**,public/**
-            -Dsonar.language=js,jsx,ts,tsx
+          projectBaseDir: ./frontend
+
       # Build the React app
       - name: Build
         run: npm run build
-        env:
-          CI: false  # Don't treat warnings as errors
 
-       # Configure AWS credentials using OIDC
+
+      # Configure AWS credentials using OIDC
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
