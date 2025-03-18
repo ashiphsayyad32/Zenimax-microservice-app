@@ -43,9 +43,11 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Run tests
+      # Run tests with fixed configuration for ESM modules
       - name: Run Tests
-        run: npm test --if-present
+        run: npm test -- --watchAll=false
+        env:
+          CI: true
 
       # Sonar scan
   #   - name: SonarQube Scan
