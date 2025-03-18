@@ -57,7 +57,14 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
+<<<<<<< HEAD
           projectBaseDir: ./frontend
+=======
+          args: >
+            -Dsonar.projectKey=todo-react-app
+            -Dsonar.sources=.
+            -Dsonar.exclusions=../node-service/**,../java-service/**,../python-service/**,../init-database.sql,node_modules/**,build/**,public/**
+>>>>>>> parent of 4a0fa3f (testing sonarqube)
 
       # Build the React app
       - name: Build
