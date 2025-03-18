@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: node-service
-        image: 058264463902.dkr.ecr.us-east-1.amazonaws.com/node-service-repo:latest
+        image: IMAGE
         imagePullPolicy: Always
         ports:
         - containerPort: 4000
