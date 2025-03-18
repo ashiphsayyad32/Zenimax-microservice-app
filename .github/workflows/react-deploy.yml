@@ -60,7 +60,8 @@ jobs:
           args: >
             -Dsonar.projectKey=todo-react-app
             -Dsonar.sources=.
-            -Dsonar.exclusions=../node-service/**,../java-service/**,../python-service/**,../init-database.sql,node_modules/**,build/**,public/**
+            -Dsonar.exclusions=**/*.java,../node-service/**,../java-service/**,../python-service/**,../init-database.sql,node_modules/**,build/**,public/**
+            -Dsonar.language=js,jsx,ts,tsx
 
       # Build the React app
       - name: Build
