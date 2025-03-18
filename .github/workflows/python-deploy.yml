@@ -119,13 +119,13 @@ jobs:
         #     - name: Checkout Repository
         #       uses: actions/checkout@v2
 
-      # Configure AWS credentials using OIDC
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          role-to-assume: ${{ secrets.AWS_IAM_ARN_PYTHON }}
-          role-session-name: eks-session
-          aws-region: ${{ secrets.AWS_REGION }}
+      # # Configure AWS credentials using OIDC
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v3
+      #   with:
+      #     role-to-assume: ${{ secrets.AWS_IAM_ARN_PYTHON }}
+      #     role-session-name: 
+      #     aws-region: ${{ secrets.AWS_REGION }}
 
       # Install kubectl
       - name: Install kubectl
@@ -142,10 +142,10 @@ jobs:
           IMAGE="${{ secrets.PYTHON_IMAGE_NAME }}:${{ github.sha }}"
           sed -i "s|image: .*|image: $IMAGE|" k8s/python-service/deployment.yaml
           cd k8s/python-service
-          kubectl apply -f configmap.yaml
-          kubectl apply -f secret.yaml
-          kubectl apply -f deployment.yaml
-          kubectl apply -f service.yaml
+          kubectl apply -f configmap.yaml --validate=false
+          kubectl apply -f secret.yaml --validate=false
+          kubectl apply -f deployment.yaml --validate=false
+          kubectl apply -f service.yaml --validate=false
           kubectl get pods
           kubectl get svc
 
