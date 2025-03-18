@@ -1,129 +1,107 @@
-#CI/CD Workflow for Python cod
-name: CI-CD workflow for python code
+name: Python Service CI/CD Pipeline
+
 on:
-
-
   push:
-    branches: [main]
-      
-
-# permissions for OIDC connectionn
-
-permissions:
-    id-token: write
-    contents: read
-    checks: write
+    branches: [ raj-feature ]
+    paths:
+      - 'python-service/**'
+      - '.github/workflows/python-deploy.yml'
+  pull_request:
+    branches: [ raj-feature ]
+    paths:
+      - 'python-service/**'
+      - '.github/workflows/python-deploy.yml'
+  workflow_dispatch:
 
 jobs:
-        # CI job
-        CI:
-          runs-on: self-hosted
-                          
-          # Checkout code from the repository
-          steps:
-          - name: 'Checkout code'
-            uses: 'actions/checkout@v2'
+  # CI job
+  CI:
+    runs-on: ubuntu-latest
+                       
+    # Checkout code from the repository
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
       
-         # Set up Python environment
-          - name: Set up Python
-            uses: actions/setup-python@v2
-            with:
-                python-version: '3.x'
+      # Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          cd python-service
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      # Run unit tests and coverage report
+      - name: Run Unit Tests and generate coverage report
+        run: |
+          cd python-service
+          python -m pytest tests/ -v
+          python -m pip install coverage
+          coverage run -m pytest tests/
+          coverage report -m
+          coverage xml -o coverage.xml
+      
+      # Upload coverage report as an artifact
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: python-service/coverage.xml
+          retention-days: 7
+      # Build trust between GitHub and AWS using OIDC connector
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ARN }}
+          role-session-name: samplesession
+          aws-region: ${{ secrets.AWS_REGION }}
 
-         # Install dependencies
-          - name: Install dependenciess
-            run: |
-              python -m pip install --upgrade pip
-              pip install -r requirements.txt
-              if  [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      # Authenticate AWS with Docker to interact with an Amazon ECR registry
+      - name: Login to Amazon ECR
+        run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-         # Run unit tests and coverage report
-          - name: Run Unit Tests and generate coverage report
-            run: |
-             cd src
-             python -m unittest -v
-             python -m pip install --upgrade pip
-             pip install coverage
-             coverage run -m unittest
-             coverage report
-             coverage html
+      
 
-         # Upload code coverage report as artifacts
-          - name: Archive code coverage html report
-            uses: actions/upload-artifact@v3
-            with:
-             name: code-coverage-report
-             path: src/htmlcov
+    # Build the Docker image using Dockerfile & tag it with commit SHA, & push it to ECR repository
+      - name: Build Docker Image
+        run: |
+          docker build -t python:${{ github.sha }} .
+          docker tag python:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME }}:${{ github.sha }}
 
+    # Run Trivy vulnerability scanner on specified Docker image in the ECR repository
+      - name: Run Trivy vulnerability scanner
+        id: trivy-scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+        continue-on-error: true
 
-        #    sonar scan
-        #   - name: SonarQube Scan
-        #     uses: actions/checkout@v2
-        #     with:
-        #         fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-        #   - uses: sonarsource/sonarqube-scan-action@master
-        #     env:
-        #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        #         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+    # Display boolean value(true/false) depending on the scan report that is received from previous step
+      - name: Detected vulnerabilities
+        if: steps.trivy-scan.outcome == 'failure'
+        run: |
+          echo "Vulnerability scan failed!"
 
+    # Display boolean value(true/false) depending on the scan report that is received from previous step
+      - name: No vulnerabilities detectedd
+        if: steps.trivy-scan.outcome == 'success'
+        run: |
+          echo "Vulnerability scan succeeded!"
 
-        # # Check sonarqube quality gate using script to make a GET request to the SonarQube API endpoint and retrieve the status of the quality gate
-        #   - name: Check SonarQube Quality Gate
-        #     run: |
-        #      status=$(curl -s "${{ secrets.SONAR_HOST_URL}}/api/qualitygates/project_status?projectKey=${{ secrets.SONAR_PROJECT_KEY }}" -u "${{ secrets.SONAR_TOKEN }}": | jq -r '.projectStatus.status')
-        #      if [[ "$status" != "OK" ]]; then
-        #      echo "SonarQube quality gate check failed."
-        #      fi 
-       
-        # Build trust between GitHub and AWS using OIDC connector
-          - name: configure aws credentials
-            uses: aws-actions/configure-aws-credentials@v3
-            with:
-             role-to-assume: ${{ secrets.AWS_IAM_ARN }}
-             role-session-name: samplesession
-             aws-region: ${{ secrets.AWS_REGION }}
-
-          # Authenticate AWS with Docker to interact with an Amazon ECR registry
-          - name: Login to Amazon ECR
-            run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-
-         
-
-        # Build the Docker image using Dockerfile & tag it with commit SHA, & push it to ECR repository
-          - name: Build Docker Image
-            run: |
-             docker build -t python:${{ github.sha }} .
-             docker tag python:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME }}:${{ github.sha }}
-
-        # Run Trivy vulnerability scanner on specified Docker image in the ECR repository
-          - name: Run Trivy vulnerability scanner
-            id: trivy-scan
-            uses: aquasecurity/trivy-action@master
-            with:
-             image-ref: '${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME }}:${{ github.sha }}'
-             format: 'table'
-             exit-code: '1'
-             ignore-unfixed: true
-             vuln-type: 'os,library'
-             severity: 'CRITICAL,HIGH'
-            continue-on-error: true
-   
-        # Display boolean value(true/false) depending on the scan report that is received from previous step
-          - name: Detected vulnerabilities
-            if: steps.trivy-scan.outcome == 'failure'
-            run: |
-             echo "Vulnerability scan failed!"
-
-        # Display boolean value(true/false) depending on the scan report that is received from previous step
-          - name: No vulnerabilities detectedd
-            if: steps.trivy-scan.outcome == 'success'
-            run: |
-             echo "Vulnerability scan succeeded!"
-
-       # Push Docker image to Amazon ECR
-          - name: push docker imagee
-            run: |
-               docker push ${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME }}:${{ github.sha }}
+    # Push Docker image to Amazon ECR
+      - name: push docker imagee
+        run: |
+            docker push ${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME }}:${{ github.sha }}
 
 
  # CD job
@@ -135,42 +113,36 @@ jobs:
         #       uses: actions/checkout@v2
 
       # Configure AWS credentials using OIDC
-          - name: Configure AWS credentials
-            uses: aws-actions/configure-aws-credentials@v3
-            with:
-              role-to-assume: ${{ secrets.AWS_IAM_ARN }}
-              role-session-name: eks-session
-              aws-region: ${{ secrets.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ARN }}
+          role-session-name: eks-session
+          aws-region: ${{ secrets.AWS_REGION }}
 
-       # Update Deployment YAML with the new image and Deploy image to EKS 
-          - name: Update Deployment YAML with New Image
-            run: |
-              aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
-              helm uninstall sample-python-app
-              sleep 30
-              IMAGE="${{ secrets.IMAGE_NAME }}:${{ github.sha }}"
-              sed -i "s|repository:.*|repository: $IMAGE|" Helm/values.yaml
-              helm package Helm
-              helm install sample-python-app ./Helm
-              # sed -i "s|image: .*|image: $IMAGE|" manifests/deployment.yaml
-              # cd manifests
-              # kubectl apply -f config.yaml
-              # kubectl apply -f secrets.yaml
-              # kubectl apply -f deployment.yaml
-              # kubectl apply -f service.yaml
-              kubectl get pods
-              kubectl get svc
-  
+    # Update Deployment YAML with the new image and Deploy image to EKS 
+      - name: Update Deployment YAML with New Image
+        run: |
+          aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+          helm uninstall sample-python-app
+          sleep 30
+          IMAGE="${{ secrets.IMAGE_NAME }}:${{ github.sha }}"
+          sed -i "s|repository:.*|repository: $IMAGE|" Helm/values.yaml
+          helm package Helm
+          helm install sample-python-app ./Helm
+          # sed -i "s|image: .*|image: $IMAGE|" manifests/deployment.yaml
+          # cd manifests
+          # kubectl apply -f config.yaml
+          # kubectl apply -f secrets.yaml
+          # kubectl apply -f deployment.yaml
+          # kubectl apply -f service.yaml
+          kubectl get pods
+          kubectl get svc
 
-      # Post-deployment cleanup
-          - name: Post-Deployment Cleanup
-            run: |
-              chmod -R 755 /home/ubuntu/actions-runner
-              chown -R ubuntu:ubuntu /home/ubuntu/actions-runner
-            if: success()  # Only run this step if the previous steps were successful
-    
- 
-             
-         
-         
-        
+
+  # Post-deployment cleanup
+      - name: Post-Deployment Cleanup
+        run: |
+          chmod -R 755 /home/ubuntu/actions-runner
+          chown -R ubuntu:ubuntu /home/ubuntu/actions-runner
+        if: success()  # Only run this step if the previous steps were successful
