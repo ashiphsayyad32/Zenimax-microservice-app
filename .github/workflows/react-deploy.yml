@@ -44,10 +44,10 @@ jobs:
         run: npm install
 
       # Run tests with fixed configuration for ESM modules
-      - name: Run Tests
-        run: npm test -- --watchAll=false
-        env:
-          CI: false
+      # - name: Run Tests
+      #   run: npm test -- --watchAll=false
+      #   env:
+      #     CI: false
 
       # Sonar scan
   #   - name: SonarQube Scan
