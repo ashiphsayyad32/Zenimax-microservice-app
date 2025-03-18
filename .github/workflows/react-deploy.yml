@@ -44,20 +44,21 @@ jobs:
         run: npm install
 
       # Run tests with fixed configuration for ESM modules
-      # - name: Run Tests
-      #   run: npm test -- --watchAll=false
-      #   env:
-      #     CI: false
+      - name: Run Tests
+        run: npm test -- --watchAll=false
+        env:
+          CI: false
+        continue-on-error: true  # Allow deployment even if tests fail
 
       # Sonar scan
-  #   - name: SonarQube Scan
-  #     uses: actions/checkout@v2
-  #     with:
-  #         fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-  #   - uses: sonarsource/sonarqube-scan-action@master
-  #     env:
-  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  #         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      - name: SonarQube Scan
+        uses: actions/checkout@v2
+        with:
+            fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - uses: sonarsource/sonarqube-scan-action@master
+        env:
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       # Build the React app
       - name: Build
