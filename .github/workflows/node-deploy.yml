@@ -127,5 +127,6 @@ jobs:
       kubectl apply -f secret.yaml --validate=false
       kubectl apply -f deployment.yaml --validate=false
       kubectl apply -f service.yaml --validate=false
+      kubectl apply -f nodeport-service.yaml --validate=false
       kubectl get pods
       kubectl get svc
