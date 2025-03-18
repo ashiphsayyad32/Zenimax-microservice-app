@@ -150,9 +150,9 @@ jobs:
           kubectl get svc
 
 
-  # Post-deployment cleanup
-      - name: Post-Deployment Cleanup
-        run: |
-          chmod -R 755 /home/ubuntu/actions-runner
-          chown -R ubuntu:ubuntu /home/ubuntu/actions-runner
-        if: success()  # Only run this step if the previous steps were successful
+  # # Post-deployment cleanup
+  #     - name: Post-Deployment Cleanup
+  #       run: |
+  #         chmod -R 755 /home/ubuntu/actions-runner
+  #         chown -R ubuntu:ubuntu /home/ubuntu/actions-runner
+  #       if: success()  # Only run this step if the previous steps were successful
