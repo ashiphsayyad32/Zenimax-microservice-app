@@ -134,8 +134,8 @@ jobs:
           IMAGE="${{ secrets.PYTHON_IMAGE_NAME }}:${{ github.sha }}"
           sed -i "s|image: .*|image: $IMAGE|" k8s/python-service/deployment.yaml
           cd k8s/python-service
-          kubectl apply -f config.yaml
-          kubectl apply -f secrets.yaml
+          kubectl apply -f configmap.yaml
+          kubectl apply -f secret.yaml
           kubectl apply -f deployment.yaml
           kubectl apply -f service.yaml
           kubectl get pods
