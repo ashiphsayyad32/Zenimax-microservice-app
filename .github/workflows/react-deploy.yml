@@ -12,7 +12,7 @@ on:
 # Environment variables
 env:
   AWS_REGION: us-east-1 # Change to your preferred region
-  S3_BUCKET: react-app-bucket-ashiph # Change to your bucket name
+  S3_BUCKET: react-app-bucket-ashiph1 # Change to your bucket name
 
 # Permissions for OIDC authentication
 permissions:
