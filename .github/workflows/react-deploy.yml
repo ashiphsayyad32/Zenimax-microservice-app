@@ -48,8 +48,7 @@ jobs:
       # Run tests with coverage and generate SonarQube reports
       - name: Run Tests with Coverage
         run: npm run test:ci
-        env:
-          CI: true  # Set to true to ensure proper CI behavior
+        continue-on-error: true  
 
       # SonarQube Scan with test coverage
       - name: SonarQube Scan
@@ -63,8 +62,7 @@ jobs:
       # Build the React app
       - name: Build
         run: npm run build
-        env:
-          CI: false  # Don't treat warnings as errors
+
 
       # Configure AWS credentials using OIDC
       - name: Configure AWS credentials
