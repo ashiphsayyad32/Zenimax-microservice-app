@@ -1,16 +1,16 @@
 name: Java Service CI/CD Pipeline
 
-on:
-  push:
-    branches: [ raj-feature ]
-    paths:
-      - 'java-service/**'
-      - '.github/workflows/java-deploy.yml'
-  pull_request:
-    branches: [ raj-feature ]
-    paths:
-      - 'java-service/**'
-      - '.github/workflows/java-deploy.yml'
+# on:
+#   push:
+#     branches: [ raj-feature ]
+#     paths:
+#       - 'java-service/**'
+#       - '.github/workflows/java-deploy.yml'
+#   pull_request:
+#     branches: [ raj-feature ]
+#     paths:
+#       - 'java-service/**'
+#       - '.github/workflows/java-deploy.yml'
   
 permissions:
     id-token: write
