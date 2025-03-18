@@ -35,6 +35,8 @@ jobs:
           cd python-service
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          # Make sure flask-cors is installed
+          pip install flask-cors
       
       # Run unit tests and coverage report
       - name: Run Unit Tests and generate coverage report
@@ -70,6 +72,7 @@ jobs:
     # Build the Docker image using Dockerfile & tag it with commit SHA, & push it to ECR repository
       - name: Build Docker Image
         run: |
+          cd python-service
           docker build -t python:${{ github.sha }} .
           docker tag python:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME }}:${{ github.sha }}
 
@@ -127,15 +130,15 @@ jobs:
           helm uninstall sample-python-app
           sleep 30
           IMAGE="${{ secrets.IMAGE_NAME }}:${{ github.sha }}"
-          sed -i "s|repository:.*|repository: $IMAGE|" Helm/values.yaml
-          helm package Helm
-          helm install sample-python-app ./Helm
-          # sed -i "s|image: .*|image: $IMAGE|" manifests/deployment.yaml
-          # cd manifests
-          # kubectl apply -f config.yaml
-          # kubectl apply -f secrets.yaml
-          # kubectl apply -f deployment.yaml
-          # kubectl apply -f service.yaml
+          # sed -i "s|repository:.*|repository: $IMAGE|" Helm/values.yaml
+          # helm package Helm
+          # helm install sample-python-app ./Helm
+          sed -i "s|image: .*|image: $IMAGE|" k8s/python-service/deployment.yaml
+          cd k8s/python-service
+          kubectl apply -f config.yaml
+          kubectl apply -f secrets.yaml
+          kubectl apply -f deployment.yaml
+          kubectl apply -f service.yaml
           kubectl get pods
           kubectl get svc
 
