@@ -50,15 +50,16 @@ jobs:
           CI: false
         continue-on-error: true  # Allow deployment even if tests fail
 
-      # Sonar scan
+        # SonarQube Scan
       - name: SonarQube Scan
-        uses: actions/checkout@v2
-        with:
-            fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - uses: sonarsource/sonarqube-scan-action@master
+        uses: sonarsource/sonarqube-scan-action@master
         env:
-            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-            SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.projectKey=todo-react-app
+            -Dsonar.sources=.
 
       # Build the React app
       - name: Build
