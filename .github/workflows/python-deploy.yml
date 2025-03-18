@@ -12,10 +12,10 @@ on:
       - 'python-service/**'
       - '.github/workflows/python-deploy.yml'
   
-  permissions:
+permissions:
     id-token: write
     contents: read
-    checks: write
+
 
 jobs:
   # CI job
