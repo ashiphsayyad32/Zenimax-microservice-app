@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Card, ListGroup, Badge, Alert, Spinner, Accordion } from 'react-bootstrap';
+import { Card, ListGroup, Badge, Alert, Spinner } from 'react-bootstrap';
 import { FaNodeJs, FaJava, FaPython, FaDatabase } from 'react-icons/fa';
 
 /**

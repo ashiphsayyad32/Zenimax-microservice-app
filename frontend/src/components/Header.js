@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar, Container, Nav, Badge } from 'react-bootstrap';
 import { FaNodeJs, FaJava, FaPython } from 'react-icons/fa';
 import axios from 'axios';
@@ -15,21 +15,25 @@ const Header = () => {
     python: false
   });
 
-  useEffect(() => {
-    // Check services health on component mount
-    checkServicesHealth();
-    
-    // Set up interval to check health every 30 seconds
-    const interval = setInterval(checkServicesHealth, 30000);
-    
-    // Clean up interval on component unmount
-    return () => clearInterval(interval);
-  }, []);
+  /**
+   * Helper function to check the health of a single service
+   * @param {string} url - The health endpoint URL to check
+   * @returns {boolean} - Whether the service is up or down
+   */
+  const checkServiceHealth = async (url) => {
+    try {
+      const response = await axios.get(url, { timeout: 3000 });
+      return response.status === 200 && response.data.status === 'UP';
+    } catch (error) {
+      console.error(`Health check failed for ${url}:`, error);
+      return false;
+    }
+  };
 
   /**
    * Checks the health status of all microservices
    */
-  const checkServicesHealth = async () => {
+  const checkServicesHealth = useCallback(async () => {
     try {
       // Check Node.js service (port 4000)
       const nodeStatus = await checkServiceHealth('http://localhost:4000/api/health');
@@ -49,22 +53,18 @@ const Header = () => {
     } catch (error) {
       console.error('Error checking services health:', error);
     }
-  };
+  }, []); // Empty dependency array as this doesn't depend on any props or state
 
-  /**
-   * Helper function to check the health of a single service
-   * @param {string} url - The health endpoint URL to check
-   * @returns {boolean} - Whether the service is up or down
-   */
-  const checkServiceHealth = async (url) => {
-    try {
-      const response = await axios.get(url, { timeout: 3000 });
-      return response.status === 200 && response.data.status === 'UP';
-    } catch (error) {
-      console.error(`Health check failed for ${url}:`, error);
-      return false;
-    }
-  };
+  useEffect(() => {
+    // Check services health on component mount
+    checkServicesHealth();
+    
+    // Set up interval to check health every 30 seconds
+    const interval = setInterval(checkServicesHealth, 30000);
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(interval);
+  }, [checkServicesHealth]); // Now this is safe because checkServicesHealth is memoized
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">

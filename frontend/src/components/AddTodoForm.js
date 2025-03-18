@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Form, Button, Row, Col, Card, Alert, Spinner } from 'react-bootstrap';
 import { FaNodeJs, FaJava, FaPython } from 'react-icons/fa';
@@ -21,12 +21,8 @@ const AddTodoForm = ({ onTaskAdded, nodeServiceUrl = 'http://localhost:4000', ja
   const [selectedCategory, setSelectedCategory] = useState('');
   const [statusName, setStatusName] = useState('Pending');
 
-  useEffect(() => {
-    fetchCategories();
-    checkServicesHealth();
-  }, []);
-
-  const checkServicesHealth = async () => {
+  // Define checkServicesHealth function with useCallback to avoid the linting warning
+  const checkServicesHealth = useCallback(async () => {
     try {
       // Check Node.js service
       const nodeStatus = await axios.get(`${nodeServiceUrl}/api/health`, { timeout: 3000 })
@@ -51,9 +47,10 @@ const AddTodoForm = ({ onTaskAdded, nodeServiceUrl = 'http://localhost:4000', ja
     } catch (error) {
       console.error('Error checking services health:', error);
     }
-  };
+  }, [nodeServiceUrl, javaServiceUrl]);
 
-  const fetchCategories = async () => {
+  // Define fetchCategories function with useCallback to avoid the linting warning
+  const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${nodeServiceUrl}/api/categories`);
@@ -67,9 +64,14 @@ const AddTodoForm = ({ onTaskAdded, nodeServiceUrl = 'http://localhost:4000', ja
     } finally {
       setLoading(false);
     }
-  };
+  }, [nodeServiceUrl]);
 
-  const handleAddCategory = async (e) => {
+  useEffect(() => {
+    fetchCategories();
+    checkServicesHealth();
+  }, [fetchCategories, checkServicesHealth]); // Dependencies are now properly memoized
+
+  const handleAddCategory = useCallback(async (e) => {
     e.preventDefault();
     if (!categoryName.trim()) return;
 
@@ -92,9 +94,9 @@ const AddTodoForm = ({ onTaskAdded, nodeServiceUrl = 'http://localhost:4000', ja
     } finally {
       setLoading(false);
     }
-  };
+  }, [nodeServiceUrl, categories, categoryName]);
 
-  const handleAddTask = async (e) => {
+  const handleAddTask = useCallback(async (e) => {
     e.preventDefault();
     if (!taskTitle.trim() || !selectedCategory) return;
 
@@ -135,7 +137,7 @@ const AddTodoForm = ({ onTaskAdded, nodeServiceUrl = 'http://localhost:4000', ja
     } finally {
       setLoading(false);
     }
-  };
+  }, [javaServiceUrl, taskTitle, taskDescription, selectedCategory, statusName, onTaskAdded]);
 
   if (loading && categories.length === 0) {
     return (
