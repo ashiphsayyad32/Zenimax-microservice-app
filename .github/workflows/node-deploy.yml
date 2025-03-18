@@ -32,7 +32,9 @@ jobs:
      uses: actions/setup-node@v3
      with:
        node-version: '22'
-       cache: 'npm'
+       # Disable caching if it's causing issues
+       # cache-dependency-path: 'node-service/package-lock.json'
+       # cache: 'npm'
 
    # Install dependencies
    - name: Install dependencies
@@ -40,19 +42,18 @@ jobs:
        cd node-service
        npm install
 
-   # Run unit tests and generate coverage report
-   - name: Run tests and generate coverage report
+   # Run unit tests
+   - name: Run tests
      run: |
        cd node-service
-       npm test -- --coverage
+       npm test
        
-   # Upload code coverage report as artifacts
+   # Upload code coverage report as artifacts (if Jest is configured to generate coverage)
    - name: Archive code coverage report
      uses: actions/upload-artifact@v4
      with:
        name: coverage-report
        path: node-service/coverage
-       retention-days: 7
 
   # Build trust between GitHub and AWS using OIDC connector
    - name: configure aws credentials
@@ -128,5 +129,3 @@ jobs:
       kubectl apply -f service.yaml --validate=false
       kubectl get pods
       kubectl get svc
-
-      
