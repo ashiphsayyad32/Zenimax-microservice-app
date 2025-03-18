@@ -1,0 +1,162 @@
+name: Java Service CI/CD Pipeline
+
+on:
+  push:
+    branches: [ raj-feature ]
+    paths:
+      - 'java-service/**'
+      - '.github/workflows/java-deploy.yml'
+  pull_request:
+    branches: [ raj-feature ]
+    paths:
+      - 'java-service/**'
+      - '.github/workflows/java-deploy.yml'
+  
+permissions:
+    id-token: write
+    contents: read
+
+
+jobs:
+  CI:
+   name: Build and Deploy to AWS
+   runs-on: ubuntu-latest
+
+  # Checkout code from the repository
+   steps:
+   - name: Checkout Code
+     uses: actions/checkout@v3
+
+   # Set up Java environment
+   - name: Set up JDK
+     uses: actions/setup-java@v3
+     with:
+       distribution: 'temurin'
+       java-version: '17'  # Adjust version as needeed
+
+   # Cache Maven dependencies
+   - name: Cache Maven packages
+     uses: actions/cache@v2
+     with:
+       path: ~/.m2
+       key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+       restore-keys: ${{ runner.os }}-maven
+
+   # Install dependencies and run tests
+   - name: Build with Maven
+     run: |
+       cd java-service
+       mvn clean install
+
+   # Generate code coverage report
+   - name: Generate code coverage report
+     run: |
+       cd java-service
+       mvn jacoco:report
+       
+   # Upload code coverage report as artifacts
+   - name: Archive code coverage report
+     uses: actions/upload-artifact@v3
+     with:
+       name: code-coverage-report
+       path: java-service/target/site/jacoco
+
+   # #  Sonarqube 
+   # - name: Build and analyze
+   #   env:
+   #       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+   #       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+   #   run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Airline-sonarqube -Dsonar.projectName='Airline-sonarqube'
+
+         
+
+  # Build trust between GitHub and AWS using OIDC connector
+   - name: configure aws credentials
+     uses: aws-actions/configure-aws-credentials@v3
+     with:
+        role-to-assume: ${{ secrets.AWS_IAM_ARN_PYTHON }}
+        role-session-name: Airline-session 
+        aws-region: ${{ secrets.AWS_REGION }}
+
+
+  # Authenticate AWS with Docker to interact with an Amazon ECR registry
+   - name: Login to Amazon ECR
+     run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID_RAJ}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      
+
+    # Build the Docker image using Dockerfile & tag it with commit SHA, & push it to ECR repository
+   - name: Build Docker Image
+     run: |
+      cd java-service
+      docker build -t java:${{ github.sha }} .
+      docker tag java:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID_RAJ}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME_JAVA }}:${{ github.sha }}
+
+# Run Trivy vulnerability scanner on specified Docker image in the ECR repository
+   - name: Run Trivy vulnerability scanner
+     id: trivy-scan
+     uses: aquasecurity/trivy-action@master
+     with:
+      image-ref: '${{ secrets.AWS_ACCOUNT_ID_RAJ}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME_JAVA }}:${{ github.sha }}'
+      format: 'table'
+      exit-code: '1'
+      ignore-unfixed: true
+      vuln-type: 'os,library'
+      severity: 'CRITICAL,HIGH'
+     continue-on-error: true
+
+# Display boolean value(true/false) depending on the scan report that is received from previous step
+   - name: Detected vulnerabilities
+     if: steps.trivy-scan.outcome == 'failure'
+     run: |
+      echo "Vulnerability scan failed!"
+
+# Display boolean value(true/false) depending on the scan report that is received from previous step
+   - name: No vulnerabilities detectedd
+     if: steps.trivy-scan.outcome == 'success'
+     run: |
+      echo "Vulnerability scan succeeded!"
+
+# Push Docker image to Amazon ECR
+   - name: push docker imagee
+     run: |
+        docker push ${{ secrets.AWS_ACCOUNT_ID_RAJ}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME_JAVA }}:${{ github.sha }}
+
+
+# CD job
+    # deploy:
+    #   # needs: CI  # This ensures that the deployment process only runs when the Docker image has been successfully built and pushed to Amazon ECR
+    #   # runs-on: self-hosted
+    #   steps:
+    #     - name: Checkout Repository
+    #       uses: actions/checkout@v2
+
+  # # Configure AWS credentials using OIDC
+  # - name: Configure AWS credentials
+  #   uses: aws-actions/configure-aws-credentials@v3
+  #   with:
+  #     role-to-assume: ${{ secrets.AWS_IAM_ARN_PYTHON }}
+  #     role-session-name: 
+  #     aws-region: ${{ secrets.AWS_REGION }}
+
+  # Install kubectl
+   - name: Install kubectl
+     run: |
+      curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      chmod +x kubectl
+      sudo mv kubectl /usr/local/bin/
+      kubectl version --client
+
+# Update Deployment YAML with the new image and Deploy image to EKS 
+   - name: Update Deployment YAML with New Image
+     run: |
+      aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+      IMAGE="${{ secrets.JAVA_IMAGE_NAME }}:${{ github.sha }}"
+      sed -i "s|image: .*|image: $IMAGE|" k8s/java-service/deployment.yaml
+      cd k8s/java-service
+      kubectl apply -f configmap.yaml --validate=false
+      kubectl apply -f secret.yaml --validate=false
+      kubectl apply -f deployment.yaml --validate=false
+      kubectl apply -f service.yaml --validate=false
+      kubectl get pods
+      kubectl get svc

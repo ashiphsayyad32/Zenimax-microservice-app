@@ -1,16 +1,16 @@
 name: Python Service CI/CD Pipeline
 
-on:
-  push:
-    branches: [ raj-feature ]
-    paths:
-      - 'python-service/**'
-      - '.github/workflows/python-deploy.yml'
-  pull_request:
-    branches: [ raj-feature ]
-    paths:
-      - 'python-service/**'
-      - '.github/workflows/python-deploy.yml'
+# on:
+#   push:
+#     branches: [ raj-feature ]
+#     paths:
+#       - 'python-service/**'
+#       - '.github/workflows/python-deploy.yml'
+#   pull_request:
+#     branches: [ raj-feature ]
+#     paths:
+#       - 'python-service/**'
+#       - '.github/workflows/python-deploy.yml'
   
 permissions:
     id-token: write
