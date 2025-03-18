@@ -10,6 +10,9 @@ describe('Header Component', () => {
   beforeEach(() => {
     // Reset all mocks before each test
     jest.clearAllMocks();
+    
+    // Mock axios get to return a failed response by default
+    axios.get.mockRejectedValue(new Error('Network error'));
   });
 
   test('renders the application title correctly', () => {
