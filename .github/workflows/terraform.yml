@@ -1,0 +1,95 @@
+name: CI-CD workflow for Terraform
+ 
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Choose action (apply/destroy)"
+        required: true
+        default: "apply"
+        type: choice
+        options:
+          - apply
+          - destroy
+ 
+permissions:
+  id-token: write
+  contents: read
+ 
+jobs:
+    setup:
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: ./terraform
+      steps:
+        - name: Checkout Code
+          uses: actions/checkout@v4
+        - name: Set up Terraform
+          uses: hashicorp/setup-terraform@v3
+ 
+        # Build trust between GitHub and AWS using OIDC 
+        - name: configure aws credentials
+          uses: aws-actions/configure-aws-credentials@v3
+          with:
+              role-to-assume: ${{ secrets.AWS_IAM_ARN }}
+              role-session-name: samplesession
+              aws-region: ${{ secrets.AWS_REGION }}
+ 
+        - name: Terraform init 
+          run: terraform init
+ 
+        - name: Terraform Validate 
+          run: terraform validate
+
+ 
+    apply:
+      runs-on: ubuntu-latest
+      needs: setup
+      if: |
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply') ||
+        (github.event_name == 'push' && !contains(github.event.head_commit.message, 'destroy'))
+      steps:
+        - name: Checkout Code
+          uses: actions/checkout@v4
+        - name: Set up Terraform
+          uses: hashicorp/setup-terraform@v3
+        - name: configure aws credentials
+          uses: aws-actions/configure-aws-credentials@v3
+          with:
+              role-to-assume: ${{ secrets.AWS_IAM_ARN }}
+              role-session-name: samplesession
+              aws-region: ${{ secrets.AWS_REGION }}
+ 
+        - name: Terraform Init
+          run: terraform init
+ 
+        - name: Terraform Plan
+          run: terraform plan -out=tfplan
+ 
+        - name: Terraform Apply
+          run: terraform apply -auto-approve 
+ 
+    destroy:
+      runs-on: ubuntu-latest
+      needs: setup
+      if: |
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy') ||
+        (github.event_name == 'push' && !contains(github.event.head_commit.message, 'destroy'))
+      steps:
+        - name: Checkout Code
+          uses: actions/checkout@v4
+        - name: Set up Terraform
+          uses: hashicorp/setup-terraform@v3
+        - name: configure aws credentials
+          uses: aws-actions/configure-aws-credentials@v3
+          with:
+              role-to-assume: ${{ secrets.AWS_IAM_ARN }}
+              role-session-name: samplesession
+              aws-region: ${{ secrets.AWS_REGION }}
+ 
+        - name: Terraform Init
+          run: cd Terraform && terraform init
+ 
+        - name: Terraform Destroy
+          run: cd Terraform && terraform destroy --auto-approve

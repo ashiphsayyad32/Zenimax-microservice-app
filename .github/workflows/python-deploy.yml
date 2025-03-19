@@ -2,12 +2,12 @@ name: Python Service CI/CD Pipeline
 
 on:
   push:
-    branches: [ raj-feature, ashiph-feature, master ]
+    branches: [ raj-feature, ashiph-feature ]
     paths:
       - 'python-service/**'
       - '.github/workflows/python-deploy.yml'
   pull_request:
-    branches: [ raj-feature, ashiph-feature, master ]
+    branches: [ raj-feature, ashiph-feature ]
     paths:
       - 'python-service/**'
       - '.github/workflows/python-deploy.yml'
