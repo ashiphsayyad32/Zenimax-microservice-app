@@ -1,0 +1,132 @@
+name: Node.js Service CI/CD Pipeline
+
+on:
+  push:
+    branches: [ raj-feature ]
+    paths:
+      - 'node-service/**'
+      - '.github/workflows/node-deploy.yml'
+  pull_request:
+    branches: [ raj-feature ]
+    paths:
+      - 'node-service/**'
+      - '.github/workflows/node-deploy.yml'
+  
+permissions:
+    id-token: write
+    contents: read
+
+
+jobs:
+  CI:
+   name: Build and Deploy to AWS
+   runs-on: ubuntu-latest
+
+  # Checkout code from the repository
+   steps:
+   - name: Checkout Code
+     uses: actions/checkout@v3
+
+   # Set up Node.js environment
+   - name: Set up Node.js
+     uses: actions/setup-node@v3
+     with:
+       node-version: '22'
+       # Disable caching if it's causing issues
+       # cache-dependency-path: 'node-service/package-lock.json'
+       # cache: 'npm'
+
+   # Install dependencies
+   - name: Install dependencies
+     run: |
+       cd node-service
+       npm install
+
+   # Run unit tests
+   - name: Run tests
+     run: |
+       cd node-service
+       npm test
+       
+   # Upload code coverage report as artifacts (if Jest is configured to generate coverage)
+   - name: Archive code coverage report
+     uses: actions/upload-artifact@v4
+     with:
+       name: coverage-report
+       path: node-service/coverage
+
+  # Build trust between GitHub and AWS using OIDC connector
+   - name: configure aws credentials
+     uses: aws-actions/configure-aws-credentials@v3
+     with:
+        role-to-assume: ${{ secrets.AWS_IAM_ARN_PYTHON }}
+        role-session-name: node-session 
+        aws-region: ${{ secrets.AWS_REGION }}
+
+
+  # Authenticate AWS with Docker to interact with an Amazon ECR registry
+   - name: Login to Amazon ECR
+     run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID_RAJ}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      
+
+    # Build the Docker image using Dockerfile & tag it with commit SHA, & push it to ECR repository
+   - name: Build Docker Image
+     run: |
+      cd node-service
+      docker build -t node:${{ github.sha }} .
+      docker tag node:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID_RAJ}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME_NODE }}:${{ github.sha }}
+
+# Run Trivy vulnerability scanner on specified Docker image in the ECR repository
+   - name: Run Trivy vulnerability scanner
+     id: trivy-scan
+     uses: aquasecurity/trivy-action@master
+     with:
+      image-ref: '${{ secrets.AWS_ACCOUNT_ID_RAJ}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME_NODE }}:${{ github.sha }}'
+      format: 'table'
+      exit-code: '1'
+      ignore-unfixed: true
+      vuln-type: 'os,library'
+      severity: 'CRITICAL,HIGH'
+     continue-on-error: true
+
+# Display boolean value(true/false) depending on the scan report that is received from previous step
+   - name: Detected vulnerabilities
+     if: steps.trivy-scan.outcome == 'failure'
+     run: |
+      echo "Vulnerability scan failed!"
+
+# Display boolean value(true/false) depending on the scan report that is received from previous step
+   - name: No vulnerabilities detected
+     if: steps.trivy-scan.outcome == 'success'
+     run: |
+      echo "Vulnerability scan succeeded!"
+
+# Push Docker image to Amazon ECR
+   - name: push docker image
+     run: |
+        docker push ${{ secrets.AWS_ACCOUNT_ID_RAJ}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME_NODE }}:${{ github.sha }}
+
+
+  # Install kubectl
+   - name: Install kubectl
+     run: |
+      curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      chmod +x kubectl
+      sudo mv kubectl /usr/local/bin/
+      kubectl version --client
+
+# Update Deployment YAML with the new image and Deploy image to EKS 
+   - name: Update Deployment YAML with New Image
+     run: |
+      aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+      IMAGE="${{ secrets.NODE_IMAGE_NAME }}:${{ github.sha }}"
+      sed -i "s|image: .*|image: $IMAGE|" k8s/node-service/deployment.yaml
+      cd k8s/node-service
+      kubectl apply -f configmap.yaml --validate=false
+      kubectl apply -f secret.yaml --validate=false
+      kubectl apply -f deployment.yaml --validate=false
+      kubectl apply -f service.yaml --validate=false
+      kubectl apply -f nodeport-service.yaml --validate=false
+      kubectl get pods
+      kubectl get svc
