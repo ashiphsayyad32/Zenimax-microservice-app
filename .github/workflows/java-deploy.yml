@@ -2,12 +2,12 @@ name: Java Service CI/CD Pipeline
 
 on:
   push:
-    branches: [ raj-feature, ashiph-feature ]
+    branches: [ raj-feature, ashiph-feature, master ]
     paths:
       - 'java-service/**'
       - '.github/workflows/java-deploy.yml'
   pull_request:
-    branches: [ raj-feature, ashiph-feature ]
+    branches: [ raj-feature, ashiph-feature, master ]
     paths:
       - 'java-service/**'
       - '.github/workflows/java-deploy.yml'
