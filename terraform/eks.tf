@@ -22,8 +22,8 @@ module "eks" {
     node_pools = ["general-purpose", "system"]
   }
 
-  iam_role_arn =aws_iam_role.cluster.arn
-  node_iam_role_name =aws_iam_role.node.name
+  iam_role_arn = aws_iam_role.cluster.arn
+  node_iam_role_name = aws_iam_role.node.name
 
   tags = {
     Name        = "${var.env}-eks-cluster"
