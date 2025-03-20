@@ -45,20 +45,20 @@ This service connects to a MySQL database with the following configuration:
    ```
    npm run dev
    ```
-6. The service will be available at http://localhost:3000
+6. The service will be available at http://localhost:4000
 
 ## API Examples
 
 ### Get all categories
 
 ```
-GET http://localhost:3000/api/categories
+GET http://localhost:4000/api/categories
 ```
 
 ### Create a new category
 
 ```
-POST http://localhost:3000/api/categories
+POST http://localhost:4000/api/categories
 Content-Type: application/json
 
 {
@@ -69,7 +69,7 @@ Content-Type: application/json
 ### Get all todos (combined data)
 
 ```
-GET http://localhost:3000/api/todos
+GET http://localhost:4000/api/todos
 ```
 
 ## Dependencies
@@ -79,3 +79,31 @@ GET http://localhost:3000/api/todos
 - dotenv - Environment variables
 - mysql2 - MySQL client
 - axios - HTTP client for making requests to other microservices
+
+## CI/CD Pipeline
+
+This service uses GitHub Actions for continuous integration and deployment:
+
+### Pipeline Features
+
+- **Automated Testing**: Runs unit tests to ensure code quality
+- **Docker Build**: Creates a Docker image for the service
+- **Security Scanning**: Uses Trivy to scan for vulnerabilities in the Docker image
+- **ECR Deployment**: Pushes the Docker image to Amazon ECR
+- **EKS Deployment**: Deploys the service to Amazon EKS
+
+### Pipeline Workflow
+
+1. The pipeline can be triggered manually from the GitHub Actions tab
+2. The Terraform infrastructure deployment must be completed first
+3. After completion, it can optionally trigger the Java service pipeline
+
+### Running the Pipeline
+
+1. Go to the GitHub Actions tab in the repository
+2. Select the "Node.js Service CI/CD Pipeline" workflow
+3. Click "Run workflow"
+4. Choose whether to trigger the Java service pipeline after completion
+5. Click "Run workflow" to start the process
+
+The pipeline will build, test, and deploy the Node.js service to the EKS cluster.

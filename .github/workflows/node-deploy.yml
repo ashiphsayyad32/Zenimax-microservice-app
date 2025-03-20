@@ -1,6 +1,25 @@
 name: Node.js Service CI/CD Pipeline
 
 on:
+  # Manual trigger with input parameters
+  workflow_dispatch:
+    inputs:
+      terraform_completed:
+        description: 'Has Terraform workflow completed successfully?'
+        required: true
+        default: 'yes'
+        type: choice
+        options:
+          - 'yes'
+          - 'no'
+      run_java_next:
+        description: 'Run Java service pipeline next?'
+        required: true
+        default: 'yes'
+        type: choice
+        options:
+          - 'yes'
+          - 'no'
   push:
     branches: [ raj-feature, ashiph-feature ]
     paths:
@@ -15,12 +34,26 @@ on:
 permissions:
     id-token: write
     contents: read
-
+    actions: write
 
 jobs:
+  check_terraform:
+    name: Check Terraform Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Terraform Completion
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [[ "${{ github.event.inputs.terraform_completed }}" != "yes" ]]; then
+            echo "::error::Terraform workflow must be completed successfully before running this workflow"
+            exit 1
+          fi
+          echo "Terraform workflow has been completed successfully, proceeding with Node.js deployment"
+
   CI:
    name: Build and Deploy to AWS
    runs-on: ubuntu-latest
+   needs: check_terraform
 
   # Checkout code from the repository
    steps:
@@ -130,3 +163,15 @@ jobs:
       kubectl apply -f nodeport-service.yaml --validate=false
       kubectl get pods
       kubectl get svc
+
+  trigger-java-pipeline:
+    needs: CI
+    if: github.event.inputs.run_java_next == 'yes'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Java Service Pipeline
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Java Service CI/CD Pipeline
+          token: ${{ secrets.GITHUB_TOKEN }}
+          inputs: '{"run_python_next": "yes"}'

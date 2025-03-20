@@ -58,3 +58,32 @@ Content-Type: application/json
   "status": "completed"
 }
 ```
+
+## CI/CD Pipeline
+
+This service uses GitHub Actions for continuous integration and deployment:
+
+### Pipeline Features
+
+- **Automated Testing**: Runs unit tests and generates coverage reports
+- **Docker Build**: Creates a Docker image for the service
+- **Security Scanning**: Uses Trivy to scan for vulnerabilities in the Docker image
+- **ECR Deployment**: Pushes the Docker image to Amazon ECR
+- **EKS Deployment**: Deploys the service to Amazon EKS
+
+### Pipeline Workflow
+
+1. The pipeline can be triggered manually from the GitHub Actions tab
+2. The Terraform infrastructure deployment must be completed first
+3. It can also be triggered automatically by the Java service pipeline
+4. After completion, it can optionally trigger the React frontend pipeline
+
+### Running the Pipeline
+
+1. Go to the GitHub Actions tab in the repository
+2. Select the "Python Service CI/CD Pipeline" workflow
+3. Click "Run workflow"
+4. Choose whether to trigger the React frontend pipeline after completion
+5. Click "Run workflow" to start the process
+
+The pipeline will build, test, and deploy the Python service to the EKS cluster.

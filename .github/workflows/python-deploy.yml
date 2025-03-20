@@ -1,6 +1,17 @@
 name: Python Service CI/CD Pipeline
 
 on:
+  # Manual trigger with input parameters
+  workflow_dispatch:
+    inputs:
+      run_react_next:
+        description: 'Run React frontend pipeline next?'
+        required: true
+        default: 'yes'
+        type: choice
+        options:
+          - 'yes'
+          - 'no'
   push:
     branches: [ raj-feature, ashiph-feature ]
     paths:
@@ -15,6 +26,7 @@ on:
 permissions:
     id-token: write
     contents: read
+    actions: write
 
 
 jobs:
@@ -149,10 +161,14 @@ jobs:
           kubectl get pods
           kubectl get svc
 
-
-  # # Post-deployment cleanup
-  #     - name: Post-Deployment Cleanup
-  #       run: |
-  #         chmod -R 755 /home/ubuntu/actions-runner
-  #         chown -R ubuntu:ubuntu /home/ubuntu/actions-runner
-  #       if: success()  # Only run this step if the previous steps were successful
+  # Trigger the React frontend pipeline if requested
+  trigger-react-pipeline:
+    needs: CI
+    if: github.event.inputs.run_react_next == 'yes'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger React Frontend Pipeline
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: React Frontend CI/CD Pipeline
+          token: ${{ secrets.GITHUB_TOKEN }}

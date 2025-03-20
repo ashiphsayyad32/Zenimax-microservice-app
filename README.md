@@ -82,7 +82,7 @@ The application uses a MySQL database with the following configuration:
    npm install
    npm start
    ```
-   The Node.js service will run on port 3000.
+   The Node.js service will run on port 4000.
 
 4. **Start the React Frontend**:
    ```bash
@@ -94,7 +94,7 @@ The application uses a MySQL database with the following configuration:
 
 ### Accessing the Application
 
-Once all services are running, you can access the frontend at http://localhost:3001
+Once all services are running, you can access the frontend at http://localhost:3000
 
 ## API Endpoints
 
@@ -114,6 +114,43 @@ Once all services are running, you can access the frontend at http://localhost:3
 - POST /api/statuses - Create a new status
 - GET /api/health - Health check endpoint
 
+## CI/CD Pipelines
+
+The project uses GitHub Actions for continuous integration and deployment. The CI/CD process follows this sequence:
+
+1. **Terraform Infrastructure Deployment**:
+   - Deploys AWS infrastructure including EKS cluster, networking, and other resources
+   - Must be run first before any service deployments
+   - Manually triggered with options for apply or destroy actions
+
+2. **Node.js Service Pipeline**:
+   - Builds, tests, and deploys the Node.js service to EKS
+   - Can only run after the Terraform pipeline completes
+   - Can optionally trigger the Java service pipeline
+
+3. **Java Service Pipeline**:
+   - Builds, tests, and deploys the Java service to EKS
+   - Can be triggered by the Node.js pipeline
+   - Can optionally trigger the Python service pipeline
+
+4. **Python Service Pipeline**:
+   - Builds, tests, and deploys the Python service to EKS
+   - Can be triggered by the Java pipeline
+   - Can optionally trigger the React frontend pipeline
+
+5. **React Frontend Pipeline**:
+   - Builds, tests, and deploys the React frontend to S3
+   - Can be triggered by the Python pipeline
+
+### Running the CI/CD Pipelines
+
+1. Go to the GitHub Actions tab in the repository
+2. Select the "Terraform Workflow" and run it with the "apply" action
+3. After Terraform completes, run the Node.js service pipeline
+4. When prompted, choose whether to run the next service pipeline in the sequence
+
+All pipelines include security scanning with Trivy and deployment to AWS.
+
 ## Troubleshooting
 
 If you encounter any issues:
@@ -121,6 +158,6 @@ If you encounter any issues:
 1. Make sure all services are running
 2. Check the console logs for each service
 3. Verify database connectivity
-4. Ensure the correct ports are available (3000, 3001, 5000, 8080)
+4. Ensure the correct ports are available (4000, 3000, 5000, 8080)
 
 The React frontend includes a service status indicator that will show which services are currently running.

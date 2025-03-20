@@ -14,7 +14,7 @@ This is the React frontend for the Zenimax Todo App microservices application. I
 
 Before running the frontend, make sure all three microservices are running:
 
-1. Node.js service (port 3000) - Manages categories and aggregates data
+1. Node.js service (port 4000) - Manages categories and aggregates data
 2. Java service (port 8080) - Manages tasks
 3. Python service (port 5000) - Manages statuses
 
@@ -25,7 +25,7 @@ In the project directory, you can run:
 ### `npm start`
 
 Runs the app in the development mode.\
-Open [http://localhost:3001](http://localhost:3001) to view it in your browser.
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
 The page will reload when you make changes.
 
@@ -68,22 +68,35 @@ This frontend application communicates with the Node.js service, which in turn a
 - `POST /api/statuses` - Create a new status (to Python service)
 - `/health` endpoints - Check service health status
 
-## CI/CD Pipeline with GitHub Actions
+## CI/CD Pipeline
 
-This project includes a GitHub Actions workflow for continuous integration and deployment to AWS S3. The workflow is defined in `.github/workflows/react-deploy.yml`.
+This service uses GitHub Actions for continuous integration and deployment:
 
-### Workflow Features
+### Pipeline Features
 
-- Automatically triggered on pushes to the main branch that affect the frontend code
-- Manual trigger option with environment selection (production/staging)
-- Security scanning with npm audit and TruffleHog for detecting secrets
-- Builds and tests the React application with code coverage reporting
-- Deploys the built application to AWS S3 using secure OIDC authentication
-- Implements proper cache control headers for optimal performance
-- Optionally invalidates CloudFront cache if using CloudFront for CDN
-- Adds deployment URL as a comment on pull requests
+- **Automated Testing**: Runs unit tests to ensure code quality
+- **Build Process**: Creates optimized production build of the React app
+- **SonarQube Scan**: Performs code quality analysis
+- **S3 Deployment**: Deploys the built application to AWS S3
+- **Cache Control**: Sets appropriate cache headers for optimal performance
 
-### Setting Up AWS Resources
+### Pipeline Workflow
+
+1. The pipeline can be triggered manually from the GitHub Actions tab
+2. The Terraform infrastructure deployment must be completed first
+3. It can also be triggered automatically by the Python service pipeline
+4. The workflow deploys the React frontend to an S3 bucket configured for static website hosting
+
+### Running the Pipeline
+
+1. Go to the GitHub Actions tab in the repository
+2. Select the "React Frontend CI/CD Pipeline" workflow
+3. Click "Run workflow"
+4. Click "Run workflow" to start the process
+
+The pipeline will build, test, and deploy the React frontend to AWS S3.
+
+## Setting Up AWS Resources
 
 Before using the CI/CD pipeline, you need to set up the following AWS resources:
 

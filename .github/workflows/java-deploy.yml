@@ -1,6 +1,16 @@
 name: Java Service CI/CD Pipeline
 
 on:
+  workflow_dispatch:
+    inputs:
+      run_python_next:
+        description: 'Run Python service pipeline next?'
+        required: true
+        default: 'yes'
+        type: choice
+        options:
+          - 'yes'
+          - 'no'
   push:
     branches: [ raj-feature, ashiph-feature ]
     paths:
@@ -15,6 +25,7 @@ on:
 permissions:
     id-token: write
     contents: read
+    actions: write
 
 
 jobs:
@@ -160,3 +171,14 @@ jobs:
       kubectl apply -f service.yaml --validate=false
       kubectl get pods
       kubectl get svc
+
+  trigger-python-pipeline:
+    needs: CI
+    if: github.event.inputs.run_python_next == 'yes'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Python Service Pipeline
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Python Service CI/CD Pipeline
+          token: ${{ secrets.GITHUB_TOKEN }}
