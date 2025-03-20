@@ -19,4 +19,4 @@ mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$P
 echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
 
 # Install New Relic add-on in Cluster
-aws eks create-addon --cluster-name REPLACE_ME --addon-name new-relic_kubernetes-operator
+aws eks create-addon --cluster-name dev-eks-automode-cluster --addon-name new-relic_kubernetes-operator
