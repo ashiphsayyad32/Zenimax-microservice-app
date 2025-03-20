@@ -59,14 +59,14 @@ jobs:
    - name: configure aws credentials
      uses: aws-actions/configure-aws-credentials@v3
      with:
-        role-to-assume: ${{ secrets.AWS_IAM_ARN_PYTHON }}
-        role-session-name: node-session 
+        role-to-assume: ${{ secrets.AWS_IAM_ARN }}
+        role-session-name: node-app-session 
         aws-region: ${{ secrets.AWS_REGION }}
 
 
   # Authenticate AWS with Docker to interact with an Amazon ECR registry
    - name: Login to Amazon ECR
-     run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID_RAJ}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+     run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
       
 
@@ -75,14 +75,14 @@ jobs:
      run: |
       cd node-service
       docker build -t node:${{ github.sha }} .
-      docker tag node:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID_RAJ}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME_NODE }}:${{ github.sha }}
+      docker tag node:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME_NODE }}:${{ github.sha }}
 
 # Run Trivy vulnerability scanner on specified Docker image in the ECR repository
    - name: Run Trivy vulnerability scanner
      id: trivy-scan
      uses: aquasecurity/trivy-action@master
      with:
-      image-ref: '${{ secrets.AWS_ACCOUNT_ID_RAJ}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME_NODE }}:${{ github.sha }}'
+      image-ref: '${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME_NODE }}:${{ github.sha }}'
       format: 'table'
       exit-code: '1'
       ignore-unfixed: true
@@ -105,7 +105,7 @@ jobs:
 # Push Docker image to Amazon ECR
    - name: push docker image
      run: |
-        docker push ${{ secrets.AWS_ACCOUNT_ID_RAJ}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME_NODE }}:${{ github.sha }}
+        docker push ${{ secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME_NODE }}:${{ github.sha }}
 
 
   # Install kubectl

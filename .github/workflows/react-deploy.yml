@@ -11,7 +11,7 @@ on:
 
 # Environment variables
 env:
-  AWS_REGION: us-east-1 # Change to your preferred region
+  AWS_REGION: {{ secrets.AWS_REGION }} # Change to your preferred region
   S3_BUCKET: react-app-bucket-ashiph1 # Change to your bucket name
 
 # Permissions for OIDC authentication
@@ -73,9 +73,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: ${{ secrets.AWS_IAM_ARN_REACT }}
-          role-session-name: eks-session
-          aws-region: ${{ secrets.AWS_REGION_REACT }}
+          role-to-assume: ${{ secrets.AWS_IAM_ARN }}
+          role-session-name: react-app-session
+          aws-region: ${{ secrets.AWS_REGION }}
 
       # Sync build folder to S3
       - name: Deploy to S3

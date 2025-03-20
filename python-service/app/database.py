@@ -11,7 +11,7 @@ from config import Config
 # Database configuration from config
 db_config = {
     'host': Config.DB_HOST,
-    'user': Config.DB_USER,
+    'user': Config.DB_USERNAME,
     'password': Config.DB_PASSWORD,
     'database': Config.DB_NAME
 }

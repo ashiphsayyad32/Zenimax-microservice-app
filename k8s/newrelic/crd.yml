@@ -1,0 +1,25 @@
+apiVersion: newrelic.com/v1alpha1
+kind: NRIBundle
+metadata:
+  name: nribundle-sample
+spec:
+  global:
+    cluster: "<cluster>" # Replace with your cluster name
+    licenseKey: "{{ secrets.NEW_RELIC_LICENSE_KEY }}" # Replace with your New Relic license key
+    lowDataMode: true
+  newrelic-infrastructure:
+    enabled: true
+    privileged: true
+  kube-state-metrics:
+    image:
+      tag: "v2.10.0"
+    enabled: true
+  kubeEvents:
+    enabled: true
+  newrelic-prometheus-agent:
+    enabled: true
+    lowDataMode: true
+    config:
+      kubernetes:
+        integrations_filter:
+          enabled: false
