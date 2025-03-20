@@ -155,6 +155,7 @@ jobs:
       aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
       IMAGE="${{ secrets.NODE_IMAGE_NAME }}:${{ github.sha }}"
       sed -i "s|image: .*|image: $IMAGE|" k8s/node-service/deployment.yaml
+      kubectl apply -f k8s/new-relic/crd.yaml --validate=false
       cd k8s/node-service
       kubectl apply -f configmap.yaml --validate=false
       kubectl apply -f secret.yaml --validate=false
