@@ -4,7 +4,7 @@ metadata:
   name: nribundle-sample
 spec:
   global:
-    cluster: "<cluster>" # Replace with your cluster name
+    cluster: "dev--eks-automode-cluster" # Replace with your cluster name
     licenseKey: "{{ secrets.NEW_RELIC_LICENSE_KEY }}" # Replace with your New Relic license key
     lowDataMode: true
   newrelic-infrastructure:

@@ -23,7 +23,7 @@ module "eks" {
   }
 
   iam_role_arn = aws_iam_role.cluster.arn
-  node_iam_role_name = aws_iam_role.node.name
+  node_iam_role_name =aws_iam_role.node.name
 
   tags = {
     Name        = "${var.env}-eks-cluster"
